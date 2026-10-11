@@ -113,7 +113,10 @@ struct OverlayView: View {
                     .disabled(focus != .note)
                 Button("", action: { undo(redo: false) }).keyboardShortcut("z")
                 Button("", action: { undo(redo: true) }).keyboardShortcut("z", modifiers: [.command, .shift])
-                Button("", action: discardKey).globalKeyboardShortcut(.discard)
+                Button("", action: onDiscard)
+                    .globalKeyboardShortcut(.discard)
+                    // While typing, ⌘⌫ is left to the note, which deletes to the start of the line.
+                    .disabled(focus == .note && KeyboardShortcuts.getShortcut(for: .discard) == .init(.delete, modifiers: .command))
                 Button("", action: onSend).globalKeyboardShortcut(.send)
                 Button("", action: onCopy).globalKeyboardShortcut(.copy)
             }
@@ -278,15 +281,6 @@ struct OverlayView: View {
             onDiscard()
         } else {
             onSave()
-        }
-    }
-
-    private func discardKey() {
-        // ⌘⌫ deletes to the start of the line while typing; it only discards outside a note.
-        if focus == .note, KeyboardShortcuts.getShortcut(for: .discard) == .init(.delete, modifiers: .command) {
-            NSApp.sendAction(#selector(NSResponder.deleteToBeginningOfLine(_:)), to: nil, from: nil)
-        } else {
-            onDiscard()
         }
     }
 
