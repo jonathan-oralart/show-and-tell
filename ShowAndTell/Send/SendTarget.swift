@@ -23,11 +23,11 @@ enum SendTarget: String, CaseIterable, Identifiable {
         }
     }
 
-    /// The Copy & Open button's fill: Claude's terracotta, or the system accent for Codex.
+    /// The Copy & Open button's fill: Claude's terracotta, or the blue of Codex's cloud.
     var tint: Color {
         switch self {
         case .claude: Color(red: 0xD9 / 255, green: 0x77 / 255, blue: 0x57 / 255)
-        case .codex: .accentColor
+        case .codex: Color(red: 0x44 / 255, green: 0x62 / 255, blue: 0xFF / 255)
         }
     }
 
@@ -35,7 +35,7 @@ enum SendTarget: String, CaseIterable, Identifiable {
     @ViewBuilder var icon: some View {
         switch self {
         case .claude: ClaudeSpark().frame(width: 15, height: 15)
-        case .codex: Image(systemName: "arrow.up.forward.app")
+        case .codex: CodexPrompt().frame(width: 15, height: 15)
         }
     }
 
@@ -60,5 +60,19 @@ nonisolated struct ClaudeSpark: Shape {
             rays.addLine(to: CGPoint(x: center.x + reach * cos(angle), y: center.y + reach * sin(angle)))
         }
         return rays.strokedPath(StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+    }
+}
+
+/// Codex's prompt: a chevron and an underscore, as on its cloud.
+nonisolated struct CodexPrompt: Shape {
+    func path(in rect: CGRect) -> Path {
+        let side = min(rect.width, rect.height)
+        let origin = CGPoint(x: rect.midX - side / 2, y: rect.midY - side / 2)
+        func point(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: origin.x + x * side, y: origin.y + y * side) }
+        var prompt = Path()
+        prompt.addLines([point(0.12, 0.24), point(0.42, 0.5), point(0.12, 0.76)])
+        prompt.move(to: point(0.56, 0.76))
+        prompt.addLine(to: point(0.9, 0.76))
+        return prompt.strokedPath(StrokeStyle(lineWidth: side * 0.15, lineCap: .round, lineJoin: .round))
     }
 }
