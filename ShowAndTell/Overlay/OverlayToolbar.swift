@@ -41,9 +41,9 @@ struct OverlayToolbar: View {
             .buttonStyle(CapsuleButtonStyle())
             .tooltip("Copy the annotated image", shortcut: KeyboardShortcuts.Name.copy.symbols)
             Button(action: onSend) {
-                Label("Copy & Open \(sendTarget.title)", systemImage: "arrow.up.forward.app")
+                Label { Text("Copy & Open \(sendTarget.title)") } icon: { sendTarget.icon }
             }
-            .buttonStyle(CapsuleButtonStyle(isProminent: true))
+            .buttonStyle(CapsuleButtonStyle(isProminent: true, tint: sendTarget.tint))
             .tooltip("Copy the annotated image and switch to \(sendTarget.title) to paste it (⌘V)", shortcut: KeyboardShortcuts.Name.send.symbols)
             #if DEBUG
             .onGeometryChange(for: CGRect.self, of: { $0.frame(in: .global) }) { DemoTake.sendButton = $0 }
@@ -185,17 +185,19 @@ private struct StyleControls: View {
     }
 }
 
-/// A capsule button that lightens on hover and darkens when pressed. The prominent one is accent-coloured.
+/// A capsule button that lightens on hover and darkens when pressed. The prominent one is filled with `tint`.
 struct CapsuleButtonStyle: ButtonStyle {
     var isProminent = false
+    var tint = Color.accentColor
 
     func makeBody(configuration: Configuration) -> some View {
-        StyledButton(configuration: configuration, isProminent: isProminent)
+        StyledButton(configuration: configuration, isProminent: isProminent, tint: tint)
     }
 
     private struct StyledButton: View {
         let configuration: ButtonStyleConfiguration
         let isProminent: Bool
+        let tint: Color
         @Environment(\.isEnabled) private var isEnabled
         @State private var isHovering = false
 
@@ -217,7 +219,7 @@ struct CapsuleButtonStyle: ButtonStyle {
         private var fill: AnyShapeStyle {
             if isProminent {
                 let lift = configuration.isPressed ? -0.08 : (isHovering ? 0.1 : 0)
-                return AnyShapeStyle(Color.accentColor.mix(with: lift >= 0 ? .white : .black, by: abs(lift)))
+                return AnyShapeStyle(tint.mix(with: lift >= 0 ? .white : .black, by: abs(lift)))
             }
             return AnyShapeStyle(Color.primary.opacity(configuration.isPressed ? 0.18 : (isHovering ? 0.13 : 0.07)))
         }
