@@ -111,8 +111,9 @@ struct OverlayView: View {
                 Button("", action: { select(nil) })
                     .keyboardShortcut(.tab, modifiers: [])
                     .disabled(focus != .note)
-                Button("", action: { undo(redo: false) }).keyboardShortcut("z")
-                Button("", action: { undo(redo: true) }).keyboardShortcut("z", modifiers: [.command, .shift])
+                // Undo marker changes. Typing in a note is undone by `OverlayPanel`, before these see the key.
+                Button("", action: session.undo).keyboardShortcut("z")
+                Button("", action: session.redo).keyboardShortcut("z", modifiers: [.command, .shift])
                 Button("", action: onDiscard)
                     .globalKeyboardShortcut(.discard)
                     // While typing, ⌘⌫ is left to the note, which deletes to the start of the line.
@@ -250,18 +251,6 @@ struct OverlayView: View {
     private func select(_ id: UUID?) {
         session.selectedID = id
         focus = .canvas
-    }
-
-    /// ⌘Z and ⇧⌘Z undo typing inside a note, otherwise marker changes. The overlay has no Edit
-    /// menu, so the note's own undo is reached by sending the action to it directly.
-    private func undo(redo: Bool) {
-        if focus == .note {
-            NSApp.sendAction(Selector(redo ? "redo:" : "undo:"), to: nil, from: nil)
-        } else if redo {
-            session.redo()
-        } else {
-            session.undo()
-        }
     }
 
     /// Esc leaves cropping, then closes the selected marker's note popup (even mid-typing), then closes.

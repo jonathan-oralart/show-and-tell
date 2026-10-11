@@ -33,6 +33,17 @@ final class OverlayPanel: NSPanel {
         super.noResponder(for: eventSelector)
     }
 
+    /// ⌘Z and ⇧⌘Z undo typing in a note. The overlay has no Edit menu to send them, and sending them
+    /// from a SwiftUI button's action leaves the note's binding holding the old text.
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        if let note = firstResponder as? NSTextView, event.charactersIgnoringModifiers?.lowercased() == "z",
+           flags == .command || flags == [.command, .shift] {
+            return note.tryToPerform(flags.contains(.shift) ? Selector(("redo:")) : Selector(("undo:")), with: self)
+        }
+        return super.performKeyEquivalent(with: event)
+    }
+
     /// Borderless panels can't take typing unless they say so.
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { true }
