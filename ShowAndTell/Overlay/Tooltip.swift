@@ -86,6 +86,7 @@ private struct TooltipBubble: View {
         .fixedSize()
         .padding(.horizontal, 10)
         .padding(.vertical, 5)
-        .glassEffect(.regular, in: .capsule)
+        // Not glass: glass fades in when it appears, so the tooltip would shift colour after showing.
+        .background(.regularMaterial, in: .capsule)
     }
 }
