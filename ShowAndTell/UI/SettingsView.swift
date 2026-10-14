@@ -6,6 +6,7 @@ struct SettingsView: View {
     @State private var opensAtLogin = SMAppService.mainApp.status == .enabled
     @AppStorage(SendSound.defaultsKey) private var sendSound = SendSound.button
     @AppStorage(SendTarget.defaultsKey) private var sendTarget = SendTarget.claude
+    @Bindable private var replay = ReplayBuffer.shared
     #if DEBUG
     @AppStorage(FeedbackImage.TextSize.defaultsKey) private var annotationTextSize = FeedbackImage.TextSize.standard
     #endif
@@ -15,6 +16,12 @@ struct SettingsView: View {
             Section {
                 KeyboardShortcuts.Recorder("Capture front window", name: .capture, onChange: KeyboardShortcuts.Name.capture.takeShortcut)
                 KeyboardShortcuts.Recorder("Record screen", name: .record, onChange: KeyboardShortcuts.Name.record.takeShortcut)
+                Toggle(isOn: $replay.isOn) {
+                    Text("Keep the last 30 seconds")
+                    Text("Records all the time, in memory only, so you can replay what just happened.")
+                }
+                KeyboardShortcuts.Recorder("Replay last 30 seconds", name: .replay, onChange: KeyboardShortcuts.Name.replay.takeShortcut)
+                    .disabled(!replay.isOn)
                 Toggle("Open at login", isOn: $opensAtLogin)
                     .onChange(of: opensAtLogin) { _, enabled in
                         do {

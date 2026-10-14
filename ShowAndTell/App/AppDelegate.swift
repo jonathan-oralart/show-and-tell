@@ -6,6 +6,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         MoveToApplications.offerIfNeeded()
         PermissionsWindow.showIfNeeded()
         CaptureCoordinator.shared.warmUp()
+        ReplayBuffer.shared.restart()
         #if DEBUG
         DemoTake.listen()
         #endif

@@ -6,6 +6,8 @@ extension KeyboardShortcuts.Name {
     static let capture = Self("capture", default: .init(.two, modifiers: [.command, .shift]))
     /// Global hotkey: start recording the screen, or stop and pick frames.
     static let record = Self("record", default: .init(.r, modifiers: [.control, .option, .command]))
+    /// Global hotkey: open the last 30 seconds of the screen to pick frames, when that's kept.
+    static let replay = Self("replay", default: .init(.l, modifiers: [.control, .option, .command]))
 
     // While annotating. Changeable in Settings; only active while the overlay is open.
     static let send = Self("send", default: .init(.return, modifiers: .command))
@@ -20,7 +22,7 @@ extension KeyboardShortcuts.Name {
     /// Recording a shortcut takes it from whichever other action had it, so one key never does two things.
     func takeShortcut(_ shortcut: KeyboardShortcuts.Shortcut?) {
         guard let shortcut else { return }
-        for name in [Self.capture, .record, .send, .copy, .discard] where name != self && KeyboardShortcuts.getShortcut(for: name) == shortcut {
+        for name in [Self.capture, .record, .replay, .send, .copy, .discard] where name != self && KeyboardShortcuts.getShortcut(for: name) == shortcut {
             KeyboardShortcuts.setShortcut(nil, for: name)
         }
     }

@@ -106,19 +106,42 @@ final class CaptureCoordinator {
         pill = nil
         Task {
             do {
-                let finished = try await ScreenRecorder.shared.stop()
-                let recording = try await Recording.open(finished.url, clicks: finished.clicks, displaySize: finished.frame.size,
-                                                         deletesFile: true)
-                let time = recording.times[0]
-                let image = try await recording.image(at: time, exact: true).image
-                let display = CapturedWindow(image: image, frame: finished.frame, screen: finished.screen,
-                                             appName: finished.appName, windowTitle: finished.windowTitle)
-                let crop = finished.windowRect ?? CGRect(origin: .zero, size: finished.frame.size)
-                present(AnnotationSession(recording: recording, display: display, crop: crop.integral, frames: [], time: time))
+                try await open(ScreenRecorder.shared.stop(), atEnd: false)
             } catch {
                 NSSound.beep()
             }
         }
+    }
+
+    /// Opens the last 30 seconds of the front window's display at the latest frame, to step back from what just happened.
+    func replay() {
+        guard panel == nil, captureTask == nil, !ScreenRecorder.shared.isRecording, ReplayBuffer.shared.isOn else {
+            NSSound.beep()
+            return
+        }
+        captureTask = Task {
+            defer { if !Task.isCancelled { captureTask = nil } }
+            do {
+                let saved = try await ReplayBuffer.shared.save()
+                guard !Task.isCancelled else { return }
+                try await open(saved, atEnd: true)
+            } catch {
+                guard !Task.isCancelled else { return }
+                NSSound.beep()
+            }
+        }
+    }
+
+    /// Opens a finished recording, cropped to the window that was in front, at its first or last frame.
+    private func open(_ finished: ScreenRecording, atEnd: Bool) async throws {
+        let recording = try await Recording.open(finished.url, clicks: finished.clicks, displaySize: finished.frame.size,
+                                                 deletesFile: true)
+        let time = atEnd ? recording.times[recording.times.count - 1] : recording.times[0]
+        let image = try await recording.image(at: time, exact: true).image
+        let display = CapturedWindow(image: image, frame: finished.frame, screen: finished.screen,
+                                     appName: finished.appName, windowTitle: finished.windowTitle)
+        let crop = finished.windowRect ?? CGRect(origin: .zero, size: finished.frame.size)
+        present(AnnotationSession(recording: recording, display: display, crop: crop.integral, frames: [], time: time))
     }
 
     /// Opens a saved capture in the overlay to change and copy again.

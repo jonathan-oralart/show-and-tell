@@ -15,6 +15,9 @@ struct ShowAndTellApp: App {
         KeyboardShortcuts.onKeyDown(for: .record) {
             CaptureCoordinator.shared.toggleRecording()
         }
+        KeyboardShortcuts.onKeyDown(for: .replay) {
+            CaptureCoordinator.shared.replay()
+        }
     }
 
     var body: some Scene {
@@ -45,6 +48,11 @@ private struct MenuContent: View {
             CaptureCoordinator.shared.toggleRecording()
         }
         .globalKeyboardShortcut(.record)
+        Button("Replay Last 30 Seconds") {
+            CaptureCoordinator.shared.replay()
+        }
+        .globalKeyboardShortcut(.replay)
+        .disabled(!ReplayBuffer.shared.isOn)
         Menu("Recent") {
             ForEach(store.captures) { saved in
                 Button {
