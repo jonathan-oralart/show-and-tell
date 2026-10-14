@@ -24,6 +24,7 @@ final class ReplayBuffer {
     @ObservationIgnored private var clicks: ClickLog?
     /// The latest restart; each waits for the one before, so streams are never started twice.
     @ObservationIgnored private var restarting: Task<Void, Never>?
+    @ObservationIgnored private var retrying: Task<Void, Never>?
 
     private init() {
         NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification, object: nil,
@@ -41,6 +42,8 @@ final class ReplayBuffer {
             guard isOn, Permission.screenRecording.isGranted else { return }
             do {
                 let content = try await SCShareableContent.excludingDesktopWindows(true, onScreenWindowsOnly: true)
+                // While the screen is locked there are no displays, and the streams stopped when it locked.
+                guard !content.displays.isEmpty else { throw NotRecording() }
                 clicks = ClickLog(keeps: Self.length * 2)
                 for display in content.displays {
                     let replay = DisplayReplay(display: display, length: Self.length) { error in
@@ -85,9 +88,12 @@ final class ReplayBuffer {
         }
     }
 
+    /// One retry at a time, however many streams stopped.
     private func retryLater() {
-        Task {
+        retrying?.cancel()
+        retrying = Task {
             try? await Task.sleep(for: .seconds(5))
+            guard !Task.isCancelled else { return }
             restart()
         }
     }
